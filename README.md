@@ -65,8 +65,3 @@ Libraries used:
 | `tqdm` | Optional progress bar during diffusion sampling |
 | `autogen-agentchat`, `autogen-ext`, `autogen-core` | Multi-agent orchestration (Microsoft AutoGen) |
 
-## Notes
-
-- All training-loss, optimizer, and training-loop code has been removed; this package is for inference only.
-- The denoiser predicts the clean latent `x_0` directly and conditions on the target properties by concatenating the property embedding at each hidden layer, with the timestep added as a per-layer residual. Classifier-free guidance is available via `LatentDenoiser.forward_with_cfg`.
-- The VAE encoder samples the latent via the reparameterization trick even at inference time, so forward-simulation and inverse-design results are stochastic between runs.
