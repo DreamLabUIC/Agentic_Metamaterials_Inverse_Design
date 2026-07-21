@@ -50,18 +50,3 @@ Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-
-Libraries used:
-
-| Library | Purpose |
-|---|---|
-| `torch` | Model definitions, tensor ops, checkpoint loading |
-| `numpy` | Numerical arrays, beta schedules |
-| `scipy` | `cKDTree` for lattice connectivity in unit-cell rendering |
-| `pandas` | Reading the reference-materials CSV |
-| `scikit-learn` | Unpickling the fitted `scaler_x.pkl` / `scaler_y.pkl` scalers |
-| `matplotlib` | Unit-cell and radar-chart rendering |
-| `python-dotenv` | Loading `OPENAI_API_KEY` from `.env` |
-| `tqdm` | Optional progress bar during diffusion sampling |
-| `autogen-agentchat`, `autogen-ext`, `autogen-core` | Multi-agent orchestration (Microsoft AutoGen) |
-
