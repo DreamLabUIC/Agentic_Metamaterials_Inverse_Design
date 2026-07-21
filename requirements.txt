@@ -1,0 +1,11 @@
+torch>=2.0
+numpy
+scipy
+pandas
+scikit-learn
+matplotlib
+python-dotenv
+tqdm
+autogen-agentchat
+autogen-ext[openai]
+autogen-core

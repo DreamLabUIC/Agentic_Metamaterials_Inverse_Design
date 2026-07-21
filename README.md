@@ -1,1 +1,126 @@
-# Agentic_Metamaterials_Inverse_Design
+# From Target to Structure: Agent-Driven Generative Inverse Design of Multimaterial Truss Metamaterials
+
+This repository contains the inference-time agentic pipeline accompanying the paper:
+
+> **From Target to Structure: Agent-Driven Generative Inverse Design of Multimaterial Truss Metamaterials**
+
+It provides an LLM-orchestrated multi-agent system, built with [AutoGen](https://microsoft.github.io/autogen/), that wraps a trained shared-attribute VAE, a property predictor, and a conditional latent diffusion model to:
+
+- **Forward simulation** — given a truss structure sentence and a base material (`E`, `nu`), predict the twelve effective directional elastic properties.
+- **Inverse design** — given twelve target elastic properties, sample the conditional latent diffusion model and decode a candidate truss structure and base material that best achieves them.
+- **Visualization** — render the 3D truss unit cell and a target-vs-predicted radar chart of the elastic properties.
+
+A single orchestrating **Planning Agent** routes the request to a **Simulation Agent** or **Design Agent**, then to a matching **Plotting Agent**, and summarizes the result.
+
+Notation follows the manuscript: **x = base material**, **transformer = structure**. A design is a coupled pair `(M_s, S)` of a base-material descriptor `M_s = (E_s, nu_s)` and a discrete structure sentence `S`.
+
+This repository is **inference-only** — no training code is included.
+
+## Repository structure
+
+```
+.
+├── agentic_ai.py           # Entry point: loads models, defines tools/agents, runs the team
+├── vae_model.py             # Shared-attribute VAE, property predictor, tokenizer, greedy decoder
+├── latent_diffusion.py      # Conditional latent diffusion sampler and denoiser
+├── Plotting_agent.py        # Unit-cell and radar-chart rendering
+├── requirements.txt
+├── .env.example              # Copy to .env and fill in your OpenAI API key
+├── data/
+│   ├── char_dict.json               # Structure-sentence vocabulary (token -> id)
+│   ├── org_dict.json                # Structure-sentence vocabulary (id -> token)
+│   ├── scaler_x.pkl                 # Fitted scaler for the base-material inputs (E, nu)
+│   ├── scaler_y.pkl                 # Fitted scaler for the 12 elastic properties
+│   └── Materials_Properties.csv     # Reference materials used for unit-cell coloring_only few samples
+├── checkpoints/
+│   ├── vae.pt                       # Shared-attribute VAE weights
+│   ├── property_predictor.pt        # Property predictor weights
+│   └── denoiser.pth                 # Latent diffusion denoiser weights
+├── assets/                   # Example output images referenced below
+└── outputs/                  # Generated unit-cell / radar images (created at runtime)
+```
+
+## Requirements
+
+- Python 3.10+
+- An OpenAI API key (the agents use `gpt-4o` via `OpenAIChatCompletionClient`)
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Libraries used:
+
+| Library | Purpose |
+|---|---|
+| `torch` | Model definitions, tensor ops, checkpoint loading |
+| `numpy` | Numerical arrays, beta schedules |
+| `scipy` | `cKDTree` for lattice connectivity in unit-cell rendering |
+| `pandas` | Reading the reference-materials CSV |
+| `scikit-learn` | Unpickling the fitted `scaler_x.pkl` / `scaler_y.pkl` scalers |
+| `matplotlib` | Unit-cell and radar-chart rendering |
+| `python-dotenv` | Loading `OPENAI_API_KEY` from `.env` |
+| `tqdm` | Optional progress bar during diffusion sampling |
+| `autogen-agentchat`, `autogen-ext`, `autogen-core` | Multi-agent orchestration (Microsoft AutoGen) |
+
+## Setup
+
+1. Clone the repository and install dependencies:
+
+   ```bash
+   git clone <this-repo-url>
+   cd <this-repo>
+   pip install -r requirements.txt
+   ```
+
+2. Copy `.env.example` to `.env` and set your API key:
+
+   ```bash
+   cp .env.example .env
+   # edit .env and set OPENAI_API_KEY=sk-...
+   ```
+
+3. Ensure the trained checkpoints are present in `checkpoints/` (`vae.pt`, `property_predictor.pt`, `denoiser.pth`) and the vocabulary/scaler files are present in `data/`.
+
+## Run
+
+```bash
+python agentic_ai.py
+```
+
+By default `main()` in `agentic_ai.py` runs a forward-simulation example:
+
+```python
+task = ("Run a simulation for the structure 'Orthotropic v3 e0 e2 e5 e10 f0' "
+        "with E=210.0 and nu=0.3.")
+```
+
+To try an inverse-design example instead, edit `main()` and uncomment:
+
+```python
+task = ("I need a truss design that achieves the following elastic "
+        "properties: E1=0.9, E2=0.9, E3=0.9, G12=0.09, G13=0.09, "
+        "G23=0.09, nu12=0, nu21=0, nu13=0, nu31=0, nu23=0, nu32=0.")
+```
+
+Generated unit-cell and radar-chart images are written to `outputs/` and opened automatically in your default image viewer.
+
+## Example outputs
+
+See `assets/` for example renders: a predicted-only radar chart (`radar_predicted_only.png`), a target-vs-achieved radar chart (`radar_compare.png`), and a rendered unit cell (`unitcell_Cubic_v0_f1_v1.png`).
+
+## Notes
+
+- All training-loss, optimizer, and training-loop code has been removed; this package is for inference only.
+- The denoiser predicts the clean latent `x_0` directly and conditions on the target properties by concatenating the property embedding at each hidden layer, with the timestep added as a per-layer residual. Classifier-free guidance is available via `LatentDenoiser.forward_with_cfg`.
+- The VAE encoder samples the latent via the reparameterization trick even at inference time, so forward-simulation and inverse-design results are stochastic between runs.
+
+## Citation
+
+If you use this code, please cite the accompanying paper:
+
+```
+From Target to Structure: Agent-Driven Generative Inverse Design of Multimaterial Truss Metamaterials
+```
