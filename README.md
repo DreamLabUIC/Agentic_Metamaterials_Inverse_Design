@@ -18,7 +18,7 @@ This repository is **inference-only**: no training code is included.
 
 ## Stiffness components
 
-The models work with the upper triangle of the 6x6 stiffness matrix, row by row, in the Voigt order of the data (1 = 11, 2 = 22, 3 = 33, **4 = 12**, 5 = 13, **6 = 23**):
+The models work with the upper triangle of the 6x6 stiffness matrix, row by row, in the Voigt order of the data (1 = 11, 2 = 22, 3 = 33, 4 = 12, 5 = 13, 6 = 23):
 
 ```
 C11 C12 C13 C14 C15 C16 C22 C23 C24 C25 C26 C33 C34 C35 C36 C44 C45 C46 C55 C56 C66
